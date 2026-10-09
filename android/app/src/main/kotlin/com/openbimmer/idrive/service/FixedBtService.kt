@@ -24,7 +24,9 @@ class FixedBtService : Service() {
         private const val CHANNEL_ID = "bmw_bt_service_channel"
 
         const val EXTRA_DEVICE = "extra_device"
+        const val EXTRA_USB_ACCESSORY = "extra_usb_accessory"
         const val ACTION_START = "action_start"
+        const val ACTION_START_USB = "action_start_usb"
         const val ACTION_STOP = "action_stop"
 
         var instance: FixedBtService? = null
@@ -32,6 +34,7 @@ class FixedBtService : Service() {
     }
 
     private var btSocket: BtAccessorySocket? = null
+    private var usbSocket: com.openbimmer.idrive.accessory.UsbAccessorySocket? = null
     private var bclConnection: BclConnection? = null
     private var cdsDataHub: CdsDataHub? = null
     var routeImporter: CarCloudRouteImporter? = null
@@ -40,7 +43,7 @@ class FixedBtService : Service() {
         private set
 
     val isConnected: Boolean
-        get() = btSocket?.isConnected == true
+        get() = (btSocket?.isConnected == true) || (usbSocket?.isConnected == true)
 
     var onTelemetryCallback: ((VehicleTelemetry) -> Unit)? = null
     var onConnectionStateCallback: ((String) -> Unit)? = null
@@ -63,6 +66,18 @@ class FixedBtService : Service() {
 
         startForeground(NOTIFICATION_ID, createNotification("Connecting to BMW iDrive..."))
 
+        if (action == ACTION_START_USB) {
+            val usbManager = getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
+            val accessory: android.hardware.usb.UsbAccessory? = intent?.getParcelableExtra(EXTRA_USB_ACCESSORY)
+                ?: usbManager.accessoryList?.firstOrNull()
+            if (accessory != null) {
+                connectToUsbAccessory(usbManager, accessory)
+            } else {
+                onConnectionStateCallback?.invoke("DISCONNECTED: No BMW USB accessory found")
+            }
+            return START_STICKY
+        }
+
         val device: BluetoothDevice? = intent?.getParcelableExtra(EXTRA_DEVICE)
         if (device != null) {
             connectToDevice(device)
@@ -71,32 +86,60 @@ class FixedBtService : Service() {
         return START_STICKY
     }
 
+    fun connectToUsbAccessory(usbManager: android.hardware.usb.UsbManager, accessory: android.hardware.usb.UsbAccessory) {
+        onConnectionStateCallback?.invoke("CONNECTING_USB")
+        btSocket?.disconnect()
+        usbSocket?.disconnect()
+        bclConnection?.stop()
+
+        usbSocket = com.openbimmer.idrive.accessory.UsbAccessorySocket(
+            usbManager = usbManager,
+            accessory = accessory,
+            onConnected = { inputStream, outputStream ->
+                onConnectionStateCallback?.invoke("USB_CONNECTED")
+                startBclProtocol(inputStream, outputStream)
+            },
+            onDisconnected = { err ->
+                onConnectionStateCallback?.invoke("DISCONNECTED: $err")
+                updateNotification("Disconnected from vehicle (USB)")
+            }
+        )
+        usbSocket?.connect()
+    }
+
+    private fun startBclProtocol(inputStream: java.io.InputStream, outputStream: java.io.OutputStream) {
+        bclConnection = BclConnection(
+            inputStream = inputStream,
+            outputStream = outputStream,
+            onPacketReceived = { packet ->
+                if (packet.src.toInt() == 1) { // Channel 1: CDS
+                    cdsDataHub?.parseCdsPayload(packet.payload)
+                }
+            },
+            onHandshakeComplete = {
+                routeImporter = CarCloudRouteImporter(bclConnection!!)
+                virtualScreenManager = com.openbimmer.idrive.rhmi.RhmiVirtualScreenManager(bclConnection!!)
+                onConnectionStateCallback?.invoke("CAR_READY")
+                updateNotification("Connected to BMW iDrive (Wired/Offline Active)")
+            },
+            onError = { err ->
+                onConnectionStateCallback?.invoke("ERROR: $err")
+            }
+        )
+        bclConnection?.startHandshake()
+    }
+
     fun connectToDevice(device: BluetoothDevice) {
         onConnectionStateCallback?.invoke("CONNECTING")
         btSocket?.disconnect()
+        usbSocket?.disconnect()
+        bclConnection?.stop()
+
         btSocket = BtAccessorySocket(
             device = device,
             onConnected = { inputStream, outputStream ->
                 onConnectionStateCallback?.invoke("SPP_CONNECTED")
-                bclConnection = BclConnection(
-                    inputStream = inputStream,
-                    outputStream = outputStream,
-                    onPacketReceived = { packet ->
-                        if (packet.src.toInt() == 1) { // Channel 1: CDS
-                            cdsDataHub?.parseCdsPayload(packet.payload)
-                        }
-                    },
-                    onHandshakeComplete = {
-                        routeImporter = CarCloudRouteImporter(bclConnection!!)
-                        virtualScreenManager = com.openbimmer.idrive.rhmi.RhmiVirtualScreenManager(bclConnection!!)
-                        onConnectionStateCallback?.invoke("CAR_READY")
-                        updateNotification("Connected to BMW iDrive (Offline Active)")
-                    },
-                    onError = { err ->
-                        onConnectionStateCallback?.invoke("ERROR: $err")
-                    }
-                )
-                bclConnection?.startHandshake()
+                startBclProtocol(inputStream, outputStream)
             },
             onDisconnected = { err ->
                 onConnectionStateCallback?.invoke("DISCONNECTED: $err")
@@ -135,6 +178,7 @@ class FixedBtService : Service() {
     override fun onDestroy() {
         bclConnection?.stop()
         btSocket?.disconnect()
+        usbSocket?.disconnect()
         instance = null
         super.onDestroy()
     }

@@ -37,8 +37,40 @@ class BtAccessorySocket(
                 attempts++
                 try {
                     Log.d(TAG, "Attempting SPP RFCOMM connection to ${device.address} (Attempt $attempts/$MAX_RETRIES)")
-                    socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
-                    socket?.connect()
+                    
+                    // First try standard SPP UUID
+                    socket = try {
+                        device.createRfcommSocketToServiceRecord(SPP_UUID)
+                    } catch (e: Exception) {
+                        null
+                    }
+
+                    try {
+                        socket?.connect()
+                    } catch (connectEx: Exception) {
+                        Log.w(TAG, "Standard SPP UUID connect failed, trying fallback reflection RFCOMM channel 1-4...")
+                        closeSocket()
+                        // Fallback reflection for Entrynav / NBT headunits listening on direct RFCOMM channel
+                        var fallbackSuccess = false
+                        for (port in 1..4) {
+                            try {
+                                val m = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+                                val fallbackSocket = m.invoke(device, port) as BluetoothSocket
+                                fallbackSocket.connect()
+                                if (fallbackSocket.isConnected) {
+                                    socket = fallbackSocket
+                                    fallbackSuccess = true
+                                    Log.i(TAG, "Connected successfully via reflection RFCOMM port $port!")
+                                    break
+                                }
+                            } catch (fallbackEx: Exception) {
+                                Log.w(TAG, "Reflection RFCOMM port $port failed: ${fallbackEx.message}")
+                            }
+                        }
+                        if (!fallbackSuccess) {
+                            throw connectEx
+                        }
+                    }
 
                     if (socket?.isConnected == true) {
                         Log.i(TAG, "Connection established and SPP data link opened with BMW iDrive!")

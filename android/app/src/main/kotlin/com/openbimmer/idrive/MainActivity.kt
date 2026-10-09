@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var btnConnect: Button
     private lateinit var btnDisconnect: Button
+    private lateinit var btnConnectUsb: Button
     private lateinit var editDestName: AutoCompleteTextView
     private lateinit var btnSearchPlace: Button
     private lateinit var editLat: EditText
@@ -129,6 +130,7 @@ class MainActivity : AppCompatActivity() {
 
         btnConnect = findViewById(R.id.btnConnect)
         btnDisconnect = findViewById(R.id.btnDisconnect)
+        btnConnectUsb = findViewById(R.id.btnConnectUsb)
         editDestName = findViewById(R.id.editDestName)
         btnSearchPlace = findViewById(R.id.btnSearchPlace)
         editLat = findViewById(R.id.editLat)
@@ -173,9 +175,10 @@ class MainActivity : AppCompatActivity() {
         if (currentLang == "VN") {
             btnLangToggle.text = "🌐 Tiếng Việt"
             section1Title.text = "TRẠNG THÁI KẾT NỐI &amp; ĐIỀU KHIỂN".replace("&amp;", "&")
-            statusDetailText.text = if (FixedBtService.instance?.isConnected == true) "Đã kết nối Bluetooth BCL tới xe BMW" else "Sẵn sàng thiết lập kết nối Bluetooth SPP tới xe."
-            btnConnect.text = "Tự Động Kết Nối Xe BMW"
+            statusDetailText.text = if (FixedBtService.instance?.isConnected == true) "Đã kết nối giao thức xe BCL (Ngoại Tuyến)" else "Sẵn sàng kết nối Bluetooth SPP hoặc cáp USB."
+            btnConnect.text = "Tự Động Kết Nối Xe BMW (BT)"
             btnDisconnect.text = "Ngắt Kết Nối"
+            btnConnectUsb.text = "🔌 Kết Nối Qua Cáp USB (Wired AOA)"
 
             section2Title.text = "THÔNG SỐ XE THỜI GIAN THỰC (CDS)"
             section3Title.text = "DẪN ĐƯỜNG &amp; BẮN TỌA ĐỘ XE (CHANNEL 3)".replace("&amp;", "&")
@@ -206,9 +209,10 @@ class MainActivity : AppCompatActivity() {
             // Default English
             btnLangToggle.text = "🌐 English"
             section1Title.text = "LINK STATUS & CONTROLS"
-            statusDetailText.text = if (FixedBtService.instance?.isConnected == true) "Connected to vehicle BCL engine" else "Ready to establish RFCOMM SPP socket."
-            btnConnect.text = "Auto-Connect Paired BMW"
+            statusDetailText.text = if (FixedBtService.instance?.isConnected == true) "Connected to vehicle BCL engine" else "Ready to establish RFCOMM SPP socket or USB cable."
+            btnConnect.text = "Auto-Connect Paired BMW (BT)"
             btnDisconnect.text = "Disconnect"
+            btnConnectUsb.text = "🔌 Connect via USB Cable (Wired AOA)"
 
             section2Title.text = "VEHICLE TELEMETRY (LIVE CDS)"
             section3Title.text = "OFFLINE NAVIGATION & DISPATCH (CHANNEL 3)"
@@ -471,6 +475,10 @@ class MainActivity : AppCompatActivity() {
             connectToFirstPairedBmw()
         }
 
+        btnConnectUsb.setOnClickListener {
+            connectToUsbAccessoryManual()
+        }
+
         btnDisconnect.setOnClickListener {
             val intent = Intent(this, FixedBtService::class.java).apply {
                 action = FixedBtService.ACTION_STOP
@@ -626,8 +634,10 @@ class MainActivity : AppCompatActivity() {
     private fun getStatusMessage(status: String): String {
         return when {
             status == "CAR_READY" -> "Fully connected to iDrive. All offline channels active."
-            status == "SPP_CONNECTED" -> "SPP link opened. Completing BCL protocol handshake..."
+            status == "SPP_CONNECTED" -> "SPP Bluetooth link opened. Completing BCL protocol handshake..."
+            status == "USB_CONNECTED" -> "USB Accessory link opened. Completing BCL protocol handshake..."
             status == "CONNECTING" -> "Establishing Bluetooth RFCOMM link..."
+            status == "CONNECTING_USB" -> "Opening USB Accessory communication channel..."
             status.startsWith("ERROR") -> status
             status.startsWith("DISCONNECTED") -> "Vehicle disconnected."
             else -> status
@@ -642,7 +652,7 @@ class MainActivity : AppCompatActivity() {
                 badgeStatus.setBackgroundColor(Color.parseColor("#238636"))
                 badgeStatus.setTextColor(Color.WHITE)
             }
-            "SPP_CONNECTED", "CONNECTING" -> {
+            "SPP_CONNECTED", "USB_CONNECTED", "CONNECTING", "CONNECTING_USB" -> {
                 badgeStatus.setBackgroundColor(Color.parseColor("#D29922"))
                 badgeStatus.setTextColor(Color.BLACK)
             }
@@ -707,6 +717,38 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             Log.e(TAG, "Exception during connect: ${e.message}")
             Toast.makeText(this, "Error connecting: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun connectToUsbAccessoryManual() {
+        val usbManager = getSystemService(Context.USB_SERVICE) as android.hardware.usb.UsbManager
+        val accessoryList = usbManager.accessoryList
+
+        if (accessoryList.isNullOrEmpty()) {
+            val msg = if (currentLang == "VN") {
+                "Chưa phát hiện xe BMW cắm qua cáp USB! Vui lòng cắm cáp USB vào cổng ở hộc tỳ tay của xe."
+            } else {
+                "No BMW USB Accessory detected! Please plug your phone via USB cable into the armrest USB port."
+            }
+            Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+            updateStatus("DISCONNECTED", msg)
+            return
+        }
+
+        val accessory = accessoryList.first()
+        val devInfo = "${accessory.manufacturer} ${accessory.model}"
+        Toast.makeText(this, "Connecting to USB Accessory: $devInfo...", Toast.LENGTH_SHORT).show()
+        updateStatus("CONNECTING_USB", "Opening USB Accessory channel to $devInfo...")
+
+        val intent = Intent(this, FixedBtService::class.java).apply {
+            action = FixedBtService.ACTION_START_USB
+            putExtra(FixedBtService.EXTRA_USB_ACCESSORY, accessory)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
 }

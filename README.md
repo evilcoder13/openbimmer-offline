@@ -13,8 +13,9 @@
 
 ## ✨ Key Features
 
-1. **100% Offline BCL Protocol Engine**:
-   - Automatic discovery and connection via Bluetooth SPP (Serial Port Profile - UUID: `00001101-0000-1000-8000-00805F9B34FB`) with previously paired BMW vehicles.
+1. **Dual Offline Connection Engine (Bluetooth SPP & Wired USB AOA)**:
+   - **Wireless**: Automatic discovery and connection via Bluetooth SPP (Serial Port Profile) with fallback reflection ports for Entrynav / NBT headunits.
+   - **Wired (USB Cable)**: Full support for **Android Open Accessory (AOA)** protocol. Plug your phone into the vehicle's armrest USB port for an ultra-stable, zero-latency wired connection (ideal for Entrynav 1 without Bluetooth Apps coding).
    - Native on-device implementation of BMW BCL Layer (Framing, Handshake Syn/Ack, Reset, Dispatch).
    - Zero telemetry sent outside, no BMW ConnectedDrive account required, complete privacy.
 
@@ -127,8 +128,9 @@ BMW and iDrive are registered trademarks of Bayerische Motoren Werke AG. This pr
 
 ## ✨ Tính năng nổi bật
 
-1. **100% Offline BCL Protocol Engine**:
-   - Tự động phát hiện và kết nối Bluetooth SPP (Serial Port Profile - UUID: `00001101-0000-1000-8000-00805F9B34FB`) với xe BMW đã ghép đôi.
+1. **Động Cơ Kết Nối Kép Ngoại Tuyến (Bluetooth SPP & Cáp USB AOA)**:
+   - **Không dây (Bluetooth)**: Tự động kết nối qua Bluetooth SPP kèm cơ chế fallback reflection đa cổng cho các dòng đầu đọc Entrynav / NBT.
+   - **Có dây (Cáp USB)**: Hỗ trợ chuẩn **Android Open Accessory (AOA)**. Chỉ cần cắm cáp USB vào cổng hộc tỳ tay của xe, kết nối cực kỳ ổn định và không độ trễ (đặc biệt tối ưu cho đầu đọc Entrynav 1 chưa kích hoạt tính năng Apps qua Bluetooth).
    - Triển khai trực tiếp BMW BCL Layer (Framing, Handshake Syn/Ack, Reset, Dispatch) ngay trên thiết bị.
    - Hoàn toàn bảo mật, không gửi dữ liệu ra bên ngoài, không cần tài khoản BMW ConnectedDrive.
 

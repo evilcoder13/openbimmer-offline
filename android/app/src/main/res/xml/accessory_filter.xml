@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <usb-accessory
+        manufacturer="BMW" />
+    <usb-accessory
+        manufacturer="Bayerische Motoren Werke" />
+    <usb-accessory
+        manufacturer="MINI" />
+    <usb-accessory
+        manufacturer="Rolls-Royce" />
+</resources>
