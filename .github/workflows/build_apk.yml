@@ -32,18 +32,19 @@ jobs:
       - name: Verify Flutter & Environment
         run: flutter doctor -v
 
+      - name: Make Gradlew Executable
+        run: chmod +x android/gradlew
+
       - name: Get Flutter dependencies
-        working-directory: flutter_idrive_offline
         run: flutter pub get
 
       - name: Build Release APK
-        working-directory: flutter_idrive_offline
         run: flutter build apk --release --split-per-abi=false
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: openbimmer-offline-release-apk
-          path: flutter_idrive_offline/build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
