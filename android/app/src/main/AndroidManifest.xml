@@ -24,6 +24,16 @@
     <!-- Offline Contacts Integration (send contact address to car nav) -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <!-- Allow querying all installed launcher apps on Android 11+ (API 30+) -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:label="OpenBimmer Offline"
         android:icon="@android:drawable/sym_def_app_icon"

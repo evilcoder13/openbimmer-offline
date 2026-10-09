@@ -174,10 +174,48 @@ class MainActivity : AppCompatActivity() {
         Thread {
             try {
                 val pm = packageManager
-                val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-                val apps = packages
-                    .filter { (it.flags and ApplicationInfo.FLAG_SYSTEM) == 0 || it.packageName == "com.google.android.apps.maps" }
-                    .mapNotNull { appInfo ->
+                val launcherIntent = Intent(Intent.ACTION_MAIN, null).apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                }
+                val resolveInfos = pm.queryIntentActivities(launcherIntent, 0)
+                
+                val foundApps = mutableListOf<AppItem>()
+                val seenPackages = mutableSetOf<String>()
+
+                for (info in resolveInfos) {
+                    val pkgName = info.activityInfo.packageName
+                    if (seenPackages.contains(pkgName)) continue
+                    seenPackages.add(pkgName)
+
+                    try {
+                        val label = info.loadLabel(pm).toString()
+                        val drawable = info.loadIcon(pm)
+                        val bmp = if (drawable is BitmapDrawable) {
+                            drawable.bitmap
+                        } else {
+                            val b = Bitmap.createBitmap(
+                                drawable.intrinsicWidth.coerceAtLeast(48),
+                                drawable.intrinsicHeight.coerceAtLeast(48),
+                                Bitmap.Config.ARGB_8888
+                            )
+                            val c = Canvas(b)
+                            drawable.setBounds(0, 0, c.width, c.height)
+                            drawable.draw(c)
+                            b
+                        }
+                        foundApps.add(AppItem(label, pkgName, bmp))
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to load icon for $pkgName: ${e.message}")
+                    }
+                }
+
+                // If resolveInfos returned empty, fallback to getInstalledApplications
+                if (foundApps.isEmpty()) {
+                    val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                    for (appInfo in packages) {
+                        if ((appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0 && appInfo.packageName != "com.google.android.apps.maps") {
+                            continue
+                        }
                         try {
                             val label = pm.getApplicationLabel(appInfo).toString()
                             val drawable = pm.getApplicationIcon(appInfo)
@@ -194,16 +232,18 @@ class MainActivity : AppCompatActivity() {
                                 drawable.draw(c)
                                 b
                             }
-                            AppItem(label, appInfo.packageName, bmp)
+                            foundApps.add(AppItem(label, appInfo.packageName, bmp))
                         } catch (e: Exception) {
-                            null
+                            // ignore
                         }
                     }
-                    .sortedBy { it.name }
+                }
+
+                val sortedApps = foundApps.sortedBy { it.name.lowercase() }
 
                 runOnUiThread {
                     installedAppList.clear()
-                    installedAppList.addAll(apps)
+                    installedAppList.addAll(sortedApps)
                     val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, installedAppList)
                     spinnerApps.adapter = adapter
                 }
