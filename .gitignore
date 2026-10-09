@@ -1,0 +1,15 @@
+# OpenBimmer Offline - .gitignore
+.gradle/
+build/
+*/build/
+app/build/
+*.apk
+*.aab
+
+# Local IDE configuration
+.idea/
+*.iml
+.vscode/
+local.properties
+.DS_Store
+Thumbs.db
