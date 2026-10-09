@@ -54,6 +54,7 @@ class BclConnection(
             outputStream.write(SESSION_INIT_BYTES)
             outputStream.flush()
             Log.d(TAG, "Sent SESSION_INIT_BYTES")
+            Thread.sleep(150)
 
             // Step 2: Send SELECTPROTO
             state = State.SELECT_PROTOCOL
@@ -62,6 +63,7 @@ class BclConnection(
                 .array()
             sendPacket(Command.SELECTPROTO, src = 0, dest = 0, payload = protoPayload)
             Log.d(TAG, "Sent Command.SELECTPROTO (mVersion = $PROTOCOL_VERSION)")
+            Thread.sleep(150)
 
             // Step 3: Send KNOCK
             state = State.KNOCKING
@@ -72,6 +74,7 @@ class BclConnection(
             val knockPayload = knockBuffer.array()
             sendPacket(Command.KNOCK, src = 0, dest = 0, payload = knockPayload)
             Log.d(TAG, "Sent Command.KNOCK")
+            Thread.sleep(150)
 
             // Step 4: Send REGISTER
             state = State.REGISTERING
@@ -81,19 +84,24 @@ class BclConnection(
             regBuffer.put("com.bmw.app".toByteArray(Charsets.UTF_8).copyOf(16))
             sendPacket(Command.REGISTER, src = 0, dest = 0, payload = regBuffer.array())
             Log.d(TAG, "Sent Command.REGISTER")
+            Thread.sleep(150)
 
             // Step 5: Send LAUNCH
             state = State.LAUNCHING
             sendPacket(Command.LAUNCH, src = 0, dest = 0, payload = null)
             Log.d(TAG, "Sent Command.LAUNCH")
+            Thread.sleep(200)
 
             // Step 6: Open Multiplex Logical Channels (CDS, RHMI, CarCloud)
             // Channel 1: CDS (Car Data Server)
             openChannel(src = 1, dest = 1)
+            Thread.sleep(100)
             // Channel 2: RHMI (In-Car UI)
             openChannel(src = 2, dest = 2)
+            Thread.sleep(100)
             // Channel 3: CarCloud (Route Import RPC)
             openChannel(src = 3, dest = 3)
+            Thread.sleep(100)
 
             state = State.CONNECTED
             Log.i(TAG, "BCL Handshake completed successfully! Multiplex channels opened.")
@@ -112,9 +120,14 @@ class BclConnection(
 
     @Synchronized
     fun sendPacket(command: Command, src: Short, dest: Short, payload: ByteArray?) {
-        val bytes = Packet.encode(command, src, dest, (payload?.size ?: 0).toShort(), payload)
-        outputStream.write(bytes)
-        outputStream.flush()
+        try {
+            val bytes = Packet.encode(command, src, dest, (payload?.size ?: 0).toShort(), payload)
+            outputStream.write(bytes)
+            outputStream.flush()
+        } catch (e: Exception) {
+            Log.e(TAG, "sendPacket error ($command): ${e.message}")
+            throw e
+        }
     }
 
     fun sendData(destChannel: Short, data: ByteArray) {
@@ -128,7 +141,10 @@ class BclConnection(
                 var bytesRead = 0
                 while (bytesRead < Packet.HEADER_SIZE && isRunning) {
                     val count = inputStream.read(headerBuf, bytesRead, Packet.HEADER_SIZE - bytesRead)
-                    if (count == -1) throw Exception("Stream closed by car")
+                    if (count == -1) {
+                        Log.w(TAG, "BCL Stream closed by car (read returned -1)")
+                        throw Exception("Car closed link (read -1)")
+                    }
                     bytesRead += count
                 }
 
@@ -153,7 +169,9 @@ class BclConnection(
             } catch (e: Exception) {
                 if (isRunning) {
                     Log.e(TAG, "BCL read loop exception: ${e.message}")
-                    onError("BCL Read error: ${e.message}")
+                    state = State.DISCONNECTED
+                    isRunning = false
+                    onError("Link closed: ${e.message}")
                     break
                 }
             }
@@ -163,7 +181,9 @@ class BclConnection(
     fun stop() {
         isRunning = false
         state = State.DISCONNECTED
-        readThread?.interrupt()
+        try {
+            readThread?.interrupt()
+        } catch (_: Exception) {}
         readThread = null
     }
 }

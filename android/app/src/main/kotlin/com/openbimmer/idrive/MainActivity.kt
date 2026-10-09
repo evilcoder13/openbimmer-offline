@@ -645,14 +645,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStatus(status: String, detail: String) {
-        badgeStatus.text = status
+        val shortBadge = when {
+            status == "CAR_READY" -> "CONNECTED"
+            status == "SPP_CONNECTED" -> "SPP CONNECTED"
+            status == "USB_CONNECTED" -> "USB CONNECTED"
+            status == "CONNECTING" || status == "CONNECTING_USB" -> "CONNECTING"
+            status.startsWith("ERROR") -> "ERROR"
+            status.startsWith("DISCONNECTED") -> "DISCONNECTED"
+            else -> status
+        }
+        badgeStatus.text = shortBadge
         statusDetailText.text = detail
-        when (status) {
-            "CAR_READY" -> {
+        when {
+            status == "CAR_READY" -> {
                 badgeStatus.setBackgroundColor(Color.parseColor("#238636"))
                 badgeStatus.setTextColor(Color.WHITE)
             }
-            "SPP_CONNECTED", "USB_CONNECTED", "CONNECTING", "CONNECTING_USB" -> {
+            status == "SPP_CONNECTED" || status == "USB_CONNECTED" || status == "CONNECTING" || status == "CONNECTING_USB" -> {
                 badgeStatus.setBackgroundColor(Color.parseColor("#D29922"))
                 badgeStatus.setTextColor(Color.BLACK)
             }
@@ -726,9 +735,9 @@ class MainActivity : AppCompatActivity() {
 
         if (accessoryList.isNullOrEmpty()) {
             val msg = if (currentLang == "VN") {
-                "Chưa phát hiện xe BMW cắm qua cáp USB! Vui lòng cắm cáp USB vào cổng ở hộc tỳ tay của xe."
+                "Chưa phát hiện xe BMW qua USB!\n• Cắm cáp USB vào cổng hộc tỳ tay của xe.\n• Kiểm tra thông báo 'Tùy chọn USB' trên điện thoại và thử chọn 'Truyền tệp' hoặc 'MIDI'."
             } else {
-                "No BMW USB Accessory detected! Please plug your phone via USB cable into the armrest USB port."
+                "No BMW USB Accessory detected!\n• Plug USB cable into the vehicle armrest USB port.\n• Check Android notification 'USB Preferences' and select 'File Transfer' or 'MIDI'."
             }
             Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
             updateStatus("DISCONNECTED", msg)
