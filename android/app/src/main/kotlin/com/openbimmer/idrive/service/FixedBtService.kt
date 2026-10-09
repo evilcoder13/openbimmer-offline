@@ -39,6 +39,9 @@ class FixedBtService : Service() {
     var virtualScreenManager: com.openbimmer.idrive.rhmi.RhmiVirtualScreenManager? = null
         private set
 
+    val isConnected: Boolean
+        get() = btSocket?.isConnected == true
+
     var onTelemetryCallback: ((VehicleTelemetry) -> Unit)? = null
     var onConnectionStateCallback: ((String) -> Unit)? = null
 

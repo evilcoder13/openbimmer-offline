@@ -38,6 +38,19 @@
                 android:textSize="11sp" />
         </LinearLayout>
 
+        <Button
+            android:id="@+id/btnLangToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="#21262D"
+            android:paddingHorizontal="10dp"
+            android:text="🌐 EN / VN"
+            android:textColor="#58A6FF"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+
         <TextView
             android:id="@+id/badgeStatus"
             android:layout_width="wrap_content"
@@ -81,6 +94,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/section1Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="LINK STATUS &amp; CONTROLS"
@@ -138,6 +152,7 @@
 
             <!-- Section 2: Live CDS Telemetry Gauges -->
             <TextView
+                android:id="@+id/section2Title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="6dp"
@@ -295,6 +310,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/section3Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="OFFLINE NAVIGATION &amp; DISPATCH (CHANNEL 3)"
@@ -395,6 +411,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/section4Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="IN-CAR RHMI APPS &amp; PROJECTION (CHANNEL 2)"
@@ -404,6 +421,7 @@
 
                     <!-- Feature 1: Telemetry in-car app screen -->
                     <TextView
+                        android:id="@+id/feature1Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
@@ -413,6 +431,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/feature1Desc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
@@ -433,6 +452,7 @@
 
                     <!-- Feature 2: Link Android App to car display -->
                     <TextView
+                        android:id="@+id/feature2Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
@@ -442,6 +462,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/feature2Desc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
@@ -497,6 +518,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/section5Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="OFFLINE MEDIA &amp; AUDIO CONTROLLER"
@@ -570,6 +592,7 @@
                     android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/section6Title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="OFFLINE CONTACTS DESTINATION PICKER"
@@ -578,6 +601,7 @@
                         android:textStyle="bold" />
 
                     <TextView
+                        android:id="@+id/section6Desc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
@@ -594,6 +618,102 @@
                         android:text="Select Contact Destination"
                         android:textColor="#FFFFFF"
                         android:textSize="12sp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Section 7: Support & Buy Me a Coffee (Donation) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="32dp"
+                app:cardBackgroundColor="#161B22"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="0dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="14dp">
+
+                    <TextView
+                        android:id="@+id/donationTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="☕ SUPPORT &amp; DONATIONS (BUY ME A COFFEE)"
+                        android:textColor="#D29922"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/donationDesc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="If OpenBimmer Offline saves you time or enhances your BMW driving experience, consider supporting the developer!"
+                        android:textColor="#8B949E"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/imgDonationQr"
+                            android:layout_width="100dp"
+                            android:layout_height="100dp"
+                            android:background="#FFFFFF"
+                            android:contentDescription="MoMo VietQR Code"
+                            android:padding="4dp"
+                            android:src="@drawable/momo_qr" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="🌍 PayPal:"
+                                android:textColor="#58A6FF"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/paypalText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="1dp"
+                                android:text="paypal.me/evilcoder13"
+                                android:textColor="#C9D1D9"
+                                android:textSize="12sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="🇻🇳 MoMo / Banking:"
+                                android:textColor="#3FB950"
+                                android:textSize="12sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/momoText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="1dp"
+                                android:text="0989993597"
+                                android:textColor="#C9D1D9"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 

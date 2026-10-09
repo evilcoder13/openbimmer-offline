@@ -64,6 +64,23 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnMediaNext: Button
     private lateinit var btnPickContact: Button
 
+    private lateinit var btnLangToggle: Button
+    private lateinit var section1Title: TextView
+    private lateinit var section2Title: TextView
+    private lateinit var section3Title: TextView
+    private lateinit var section4Title: TextView
+    private lateinit var feature1Title: TextView
+    private lateinit var feature1Desc: TextView
+    private lateinit var feature2Title: TextView
+    private lateinit var feature2Desc: TextView
+    private lateinit var section5Title: TextView
+    private lateinit var section6Title: TextView
+    private lateinit var section6Desc: TextView
+    private lateinit var donationTitle: TextView
+    private lateinit var donationDesc: TextView
+
+    private var currentLang: String = "EN" // "EN" or "VN"
+
     private var isPlayingMedia = false
     private var lastTelemetry = VehicleTelemetry()
 
@@ -129,10 +146,96 @@ class MainActivity : AppCompatActivity() {
         btnMediaNext = findViewById(R.id.btnMediaNext)
         btnPickContact = findViewById(R.id.btnPickContact)
 
+        btnLangToggle = findViewById(R.id.btnLangToggle)
+        section1Title = findViewById(R.id.section1Title)
+        section2Title = findViewById(R.id.section2Title)
+        section3Title = findViewById(R.id.section3Title)
+        section4Title = findViewById(R.id.section4Title)
+        feature1Title = findViewById(R.id.feature1Title)
+        feature1Desc = findViewById(R.id.feature1Desc)
+        feature2Title = findViewById(R.id.feature2Title)
+        feature2Desc = findViewById(R.id.feature2Desc)
+        section5Title = findViewById(R.id.section5Title)
+        section6Title = findViewById(R.id.section6Title)
+        section6Desc = findViewById(R.id.section6Desc)
+        donationTitle = findViewById(R.id.donationTitle)
+        donationDesc = findViewById(R.id.donationDesc)
+
         // Default test coordinates
         editDestName.setText("Hồ Hoàn Kiếm (Sword Lake), Hà Nội")
         editLat.setText("21.0285")
         editLng.setText("105.8542")
+
+        updateLanguageUI()
+    }
+
+    private fun updateLanguageUI() {
+        if (currentLang == "VN") {
+            btnLangToggle.text = "🌐 Tiếng Việt"
+            section1Title.text = "TRẠNG THÁI KẾT NỐI &amp; ĐIỀU KHIỂN".replace("&amp;", "&")
+            statusDetailText.text = if (FixedBtService.instance?.isConnected == true) "Đã kết nối Bluetooth BCL tới xe BMW" else "Sẵn sàng thiết lập kết nối Bluetooth SPP tới xe."
+            btnConnect.text = "Tự Động Kết Nối Xe BMW"
+            btnDisconnect.text = "Ngắt Kết Nối"
+
+            section2Title.text = "THÔNG SỐ XE THỜI GIAN THỰC (CDS)"
+            section3Title.text = "DẪN ĐƯỜNG &amp; BẮN TỌA ĐỘ XE (CHANNEL 3)".replace("&amp;", "&")
+            editDestName.hint = "Tìm điểm đến (Hà Nội, BMW, Sân bay...)"
+            btnSearchPlace.text = "🔍 Tìm"
+            editLat.hint = "Vĩ độ (21.0285)"
+            editLng.hint = "Kinh độ (105.8542)"
+            btnSendRoute.text = "Bắn Tọa Độ Vào Bản Đồ iDrive Của Xe"
+
+            section4Title.text = "ỨNG DỤNG MÀN HÌNH XE RHMI (CHANNEL 2)"
+            feature1Title.text = "1. Bảng Đồng Hồ Telemetry Trên Màn Hình Xe:"
+            feature1Desc.text = "Hiển thị dashboard thể thao phong cách M-Power với các thông số xe trực tiếp trên màn hình iDrive."
+            btnPushTelemetryApp.text = "📊 Mở Ứng Dụng Telemetry Trên Màn Hình Xe"
+
+            feature2Title.text = "2. Liên Kết Ứng Dụng Android Lên Màn Hình Xe:"
+            feature2Desc.text = "Chọn ứng dụng bất kỳ đã cài đặt trên điện thoại để đồng bộ giao diện lên màn hình rộng BMW."
+            btnLinkAppToCar.text = "📲 Đồng Bộ Ứng Dụng Lên Màn Hình iDrive"
+            btnPushNavCard.text = "Đẩy Thẻ Dẫn Đường Lên Màn Hình iDrive"
+
+            section5Title.text = "ĐIỀU KHIỂN ÂM NHẠC &amp; MEDIA NGOẠI TUYẾN".replace("&amp;", "&")
+            btnPickContact.text = "Chọn Điểm Đến Từ Danh Bạ"
+            section6Title.text = "CHỌN ĐIỂM ĐẾN TỪ DANH BẠ ĐIỆN THOẠI"
+            section6Desc.text = "Trích xuất địa chỉ trực tiếp từ danh bạ điện thoại và gửi vào bản đồ dẫn đường của xe."
+
+            donationTitle.text = "☕ ỦNG HỘ TÁC GIẢ (BUY ME A COFFEE)"
+            donationDesc.text = "Nếu OpenBimmer Offline hữu ích và giúp bạn kết nối xe dễ dàng, hãy tiếp thêm động lực cho tác giả nhé!"
+        } else {
+            // Default English
+            btnLangToggle.text = "🌐 English"
+            section1Title.text = "LINK STATUS & CONTROLS"
+            statusDetailText.text = if (FixedBtService.instance?.isConnected == true) "Connected to vehicle BCL engine" else "Ready to establish RFCOMM SPP socket."
+            btnConnect.text = "Auto-Connect Paired BMW"
+            btnDisconnect.text = "Disconnect"
+
+            section2Title.text = "VEHICLE TELEMETRY (LIVE CDS)"
+            section3Title.text = "OFFLINE NAVIGATION & DISPATCH (CHANNEL 3)"
+            editDestName.hint = "Search destination (Hà Nội, BMW...)"
+            btnSearchPlace.text = "🔍 Find"
+            editLat.hint = "Latitude (21.0285)"
+            editLng.hint = "Longitude (105.8542)"
+            btnSendRoute.text = "Push Coordinates to iDrive Navigation"
+
+            section4Title.text = "IN-CAR RHMI APPS & PROJECTION (CHANNEL 2)"
+            feature1Title.text = "1. Vehicle Telemetry App on Car Display:"
+            feature1Desc.text = "Renders high-definition M-style live telemetry dashboard directly on the iDrive screen."
+            btnPushTelemetryApp.text = "📊 Launch Telemetry App on iDrive Display"
+
+            feature2Title.text = "2. Link Android Phone App to Car Display:"
+            feature2Desc.text = "Select an installed phone app to stream its screen & UI onto the BMW widescreen."
+            btnLinkAppToCar.text = "📲 Link & Mirror App to iDrive Screen"
+            btnPushNavCard.text = "Push Navigation HUD Card to Screen"
+
+            section5Title.text = "OFFLINE MEDIA & AUDIO CONTROLLER"
+            btnPickContact.text = "Select Contact Destination"
+            section6Title.text = "OFFLINE CONTACTS DESTINATION PICKER"
+            section6Desc.text = "Extract postal addresses directly from phone contacts and dispatch them into iDrive Navigation."
+
+            donationTitle.text = "☕ SUPPORT & DONATIONS (BUY ME A COFFEE)"
+            donationDesc.text = "If OpenBimmer Offline saves you time or enhances your BMW driving experience, consider supporting the developer!"
+        }
     }
 
     private fun loadOfflinePlaces() {
@@ -357,6 +460,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
+        btnLangToggle.setOnClickListener {
+            currentLang = if (currentLang == "EN") "VN" else "EN"
+            updateLanguageUI()
+            val msg = if (currentLang == "VN") "Đã chuyển sang Tiếng Việt" else "Switched to English"
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+        }
+
         btnConnect.setOnClickListener {
             connectToFirstPairedBmw()
         }

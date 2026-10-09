@@ -23,6 +23,9 @@ class BtAccessorySocket(
     private var isRunning = false
     private var workerThread: Thread? = null
 
+    val isConnected: Boolean
+        get() = socket?.isConnected == true
+
     fun connectAsync() {
         if (isRunning) return
         isRunning = true
